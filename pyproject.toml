@@ -1,0 +1,66 @@
+[project]
+name = "awaken-omni"                # the Python module is `duplexaudio`
+version = "0.1.0"
+description = "Awaken Full Duplex (Qwen3-Omni): full-duplex speech-to-speech conversation model (inference and real-time demo)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    # torch: the cu128 build (see [tool.uv] below, so `uv sync` installs the CUDA wheel directly).
+    "torch>=2.7,<2.9",
+    "transformers>=5.12,<5.13",   # the Qwen3-Omni thinker (uses the 5.x `dtype=` from_pretrained kwarg)
+    "moshi==0.2.13",              # the talker LMModel / LMGen and the Mimi codec (MIT)
+    "huggingface-hub==1.14.0",    # model downloads (see the override below)
+    "safetensors==0.7.0",
+    "numpy>=1.26,<2.0",
+    "scipy==1.15.3",              # resampling (input wavs, the live mic checks)
+    "soundfile==0.14.0",          # wav io (recordings, headless client)
+    "pyyaml>=6.0",
+    "fastapi==0.139.0",           # the real-time demo server (awaken-server)
+    "uvicorn==0.49.0",            # serves awaken-server (its WebSocket support comes from websockets)
+    "websockets==16.0",           # WebSocket for awaken-server (uvicorn's /ws) and awaken-client
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+awaken-server = "duplexaudio.serving.realtime.server:main"     # the real-time demo server
+awaken-client = "duplexaudio.serving.realtime.client:main"     # headless client: streams a wav through a running server
+awaken-offline = "duplexaudio.serving.realtime.offline:main"   # a recorded user track through the engine, no server
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/duplexaudio"]
+
+[tool.uv]
+# moshi 0.2.13's metadata caps huggingface-hub < 1.0, but it runs fine with the 1.14 that transformers 5.x needs;
+# override the stale upper bound.
+override-dependencies = ["huggingface-hub==1.14.0"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = ["E702", "E741"]          # compact one-line statements and short loop names are the house style
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

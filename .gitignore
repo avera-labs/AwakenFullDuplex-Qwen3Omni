@@ -1,0 +1,31 @@
+# runtime artifacts (model files when not using --model, and session recordings)
+/checkpoints
+/data
+/logs
+# the downloaded model repo (hf download ... --local-dir ./pretrained_models/awaken-omni)
+/pretrained_models
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# large binaries / audio
+*.pt
+*.safetensors
+*.bin
+*.npy
+*.npz
+*.wav
+*.flac
+*.mp3
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/

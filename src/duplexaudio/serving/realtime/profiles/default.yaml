@@ -1,0 +1,45 @@
+name: default
+description: >-
+  The released thinker and talker. Thinker: yields to barge-in and backchannels. Decode: greedy in silence, speech
+  temperature 0.2, repetition control 1.2 / no-repeat 3-gram / window 24, no SS/SE bias, no external VAD (the model
+  decides every turn itself). Talker: text lead 3 frames, the default voice prompt + its transcript, train-layout
+  prefix, C2u canonicalizer, moshi sampler temp 0.8 / top-k 250. Room-tone floor at -78..-63 dBFS under the user
+  channel.
+thinker:
+  ckpt: checkpoints/thinker/model.pt
+  ckpt_md5: 58248178e3c518dbde904dea8cb535f3
+  persona: checkpoints/thinker/persona.txt
+  persona_md5: 1214e93c1310875e7de90d96310166e3
+  lora_alloc_rank: null
+  max_cache_len: 4096
+  prefill_micro_batch: 1
+  decode:
+    temperature: 0.0
+    silence_temperature: 0.0
+    speech_temperature: 0.2
+    rep_control: {no_repeat_ngram: 3, rep_penalty: 1.2, rep_window: 24}
+    ss_bias: 0.0
+    se_bias: 0.0
+talker:
+  ckpt: checkpoints/talker/model.safetensors
+  ckpt_md5: 3feed27f2c7428271efc320b90b42c79
+  config: configs/talker.yaml
+  config_md5: bcd861f908df55b18f2d108dfc735b63
+  vp_codes: data/default_vp_codes.npy
+  vp_codes_md5: aeeca4c949199b035edd90280ab1d573
+  vp_text: data/default_vp_text.npy
+  vp_text_md5: ddc8815c1ee7bcf2baa4f9fc7e3a0707
+  layout: train
+  canon_table: data/talker_canon.json
+  canon_md5: 9672c2dcefbf4d5cf1a334fcd219e911
+  canon_mode: c2u
+  sampler: {noise: legacy, temp: 0.8, top_k: 250, top_p: 0.0}
+  session: persistent
+frontend:
+  floor_bands: [[-78.0, -63.0, 1.0]]
+  mimi_ring_capacity: 250
+  mimi_cuda_graph: false
+session:
+  cap_frames: 3000
+  seed: 0
+  end_flush_frames: 4

@@ -1,0 +1,32 @@
+# Talker model config: the default talker (text lead 3 frames).
+# Read at load time: moshi_lm (LMModel architecture, moshiko defaults overridden), the text lead, the ch0
+# encoding (the thinker's token stream), zero user embeddings, and the voice-prompt prefix length + spacer.
+moshi_lm:
+  dim: 4096
+  num_layers: 8
+  num_heads: 32
+  hidden_scale: 4.125
+  context: 3000
+  positional_embedding: rope
+  norm: rms_norm_f32
+  gating: silu
+  causal: true
+  n_q: 16
+  dep_q: 8
+  card: 2048
+  text_card: 32000
+  existing_text_padding_id: 3
+  delays: [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1]
+  depformer_dim: 1024
+  depformer_num_layers: 6
+  depformer_num_heads: 16
+  depformer_dim_feedforward: 4224
+  depformer_multi_linear: true
+  depformer_weights_per_step: true
+  depformer_pos_emb: none
+  depformer_context: 8
+text_lead_frames: 3
+ch0_encoding: thinker_stream
+zero_user_emb: true
+vp_frames: 60
+vp_silence_frames: 12

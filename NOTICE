@@ -1,0 +1,22 @@
+Awaken Full Duplex (Qwen3-Omni)
+Copyright 2026 the Awaken Full Duplex authors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product builds on the following third-party work. Except where noted below, their code and model weights are not
+included in this repository; they are installed as dependencies or downloaded from Hugging Face at run time, under
+their own licenses.
+
+* Qwen3-Omni (https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct), the Qwen team, Alibaba Cloud,
+  Apache License 2.0. The thinker is the Qwen3-Omni thinker, kept frozen and loaded through the `transformers`
+  library, with trained adapters (LoRA, user-audio front end, channel fusion) on top.
+
+* Moshi and the Mimi audio codec (https://github.com/kyutai-labs/moshi; kyutai/moshiko-pytorch-bf16), Kyutai.
+  Python package under the MIT License; model weights under CC-BY 4.0. The talker is a Moshi LMModel, and audio is
+  encoded and decoded with Mimi. LMGenX in src/duplexaudio/inference/talker/crn_sampler.py subclasses moshi's LMGen,
+  and its depformer_step is adapted from moshi's (MIT License, Copyright (c) Kyutai).
+
+* PersonaPlex (https://github.com/NVIDIA/personaplex), NVIDIA, MIT-licensed code. The talker's voice-prompt prefix
+  convention (fixed user-channel "sine" codes, silence spacer) follows PersonaPlex.
+
+The model weights of this release are distributed separately, on Hugging Face, under the terms stated there.

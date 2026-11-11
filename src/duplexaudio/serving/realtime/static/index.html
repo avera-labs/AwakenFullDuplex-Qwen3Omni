@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Awaken Full Duplex — Based on Qwen3-Omni</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<header>
+  <h1>Awaken Full Duplex — Based on Qwen3-Omni</h1>
+  <span id="pill" class="pill pill-wait">connecting</span>
+  <span id="statusMsg" class="muted"></span>
+</header>
+<main>
+  <section class="panel">
+    <div id="profile" class="muted"></div>
+    <div id="secureWarn" class="warnbox" hidden></div>
+    <div id="inputWarn" class="warnbox" hidden></div>
+    <div class="row">
+      <label><input type="radio" name="in" value="mic" checked> Microphone</label>
+      <label><input type="radio" name="in" value="file"> wav file</label>
+      <input type="file" id="wavFile" accept="audio/*" hidden>
+    </div>
+    <div class="row">
+      <label><input type="radio" name="out" value="processed" checked> Noise suppression + echo cancellation (default, works with speakers)</label>
+      <label><input type="radio" name="out" value="raw"> Raw microphone (no noise suppression or echo cancellation: headphones and a quiet room required)</label>
+    </div>
+    <div id="aecWarn" class="warnbox" hidden>The raw microphone has no noise suppression or echo cancellation: with speakers the model hears its own voice, takes it for you interrupting and stops; background noise also makes it think you are still talking, so it does not take its turn. Use headphones in a quiet place.</div>
+    <div class="row">
+      <button id="startBtn" disabled>Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <span id="sessionInfo" class="muted"></span>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>What the model says</h2>
+    <div id="transcript"></div>
+  </section>
+  <section class="panel metrics">
+    <div><span class="k">Per-frame compute p50 / p90</span><span id="m_tick" class="v">–</span><span id="m_rtf" class="muted"></span></div>
+    <div><span class="k">Server frame in → out p50 / p90</span><span id="m_srv" class="v">–</span><span id="m_backlog" class="muted"></span></div>
+    <div><span class="k">Playback buffer</span><span id="m_buf" class="v">–</span><span id="m_bufd" class="muted"></span></div>
+    <div><span class="k">Capture → playback start</span><span id="m_pipe" class="v">–</span><span id="m_lag" class="muted"></span></div>
+    <div><span class="k">Session length / cap</span><span id="m_len" class="v">–</span></div>
+    <div><span class="k">Round-trip RTT</span><span id="m_rtt" class="v">–</span></div>
+  </section>
+  <section class="panel">
+    <div id="downloads"></div>
+    <div id="log"></div>
+  </section>
+</main>
+<script src="static/app.js"></script>
+</body>
+</html>

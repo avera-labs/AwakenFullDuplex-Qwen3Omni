@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Awaken Full Duplex — Based on Qwen3-Omni</title>
+<meta name="description" content="Awaken Full Duplex, based on Qwen3-Omni: a frozen multimodal LLM becomes a word-level full-duplex spoken dialogue system with 97M trainable parameters and about 30 GPU-hours of adaptation.">
+<meta name="author" content="Tairan Chen, Richard Yucheng He, Yihang Liu, Baodong Cao, Chen Xu">
+<link rel="canonical" href="https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/">
+
+<!-- Open Graph / Twitter (absolute URLs: link previews do not resolve relative paths) -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="AveraLabs">
+<meta property="og:title" content="Awaken Full Duplex — Based on Qwen3-Omni">
+<meta property="og:description" content="A frozen multimodal LLM becomes a word-level full-duplex spoken dialogue system with 97M trainable parameters and about 30 GPU-hours of adaptation.">
+<meta property="og:url" content="https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/">
+<meta property="og:image" content="https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/assets/social_preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Awaken Full Duplex, based on Qwen3-Omni: title card with the paper's Figure 1, in which the agent backchannels while the user talks and yields when interrupted">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Awaken Full Duplex — Based on Qwen3-Omni">
+<meta name="twitter:description" content="A frozen multimodal LLM becomes a word-level full-duplex spoken dialogue system with 97M trainable parameters and about 30 GPU-hours of adaptation.">
+<meta name="twitter:image" content="https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/assets/social_preview.png">
+<meta name="twitter:image:alt" content="Awaken Full Duplex, based on Qwen3-Omni: title card with the paper's Figure 1">
+
+<!-- Google Scholar -->
+<meta name="citation_title" content="An LLM Is All You Need: Data-Efficient Adaptation to Full-Duplex, Word-Level Spoken Dialogue">
+<meta name="citation_author" content="Chen, Tairan">
+<meta name="citation_author" content="He, Richard Yucheng">
+<meta name="citation_author" content="Liu, Yihang">
+<meta name="citation_author" content="Cao, Baodong">
+<meta name="citation_author" content="Xu, Chen">
+<meta name="citation_publication_date" content="2026">
+<!-- ARXIV: no arXiv id yet. When it exists, enable the next line with the real id. -->
+<!-- <meta name="citation_pdf_url" content="https://arxiv.org/pdf/XXXX.XXXXX"> -->
+
+<meta name="theme-color" content="#1f2a3b">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "An LLM Is All You Need: Data-Efficient Adaptation to Full-Duplex, Word-Level Spoken Dialogue",
+  "alternativeHeadline": "Awaken Full Duplex — Based on Qwen3-Omni",
+  "description": "A frozen multimodal LLM becomes a word-level full-duplex spoken dialogue system with 97M trainable parameters and about 30 GPU-hours of adaptation.",
+  "author": [
+    {"@type": "Person", "name": "Tairan Chen", "affiliation": {"@type": "Organization", "name": "AveraLabs"}},
+    {"@type": "Person", "name": "Richard Yucheng He", "affiliation": {"@type": "Organization", "name": "AveraLabs"}},
+    {"@type": "Person", "name": "Yihang Liu", "affiliation": {"@type": "Organization", "name": "AveraLabs"}},
+    {"@type": "Person", "name": "Baodong Cao", "affiliation": {"@type": "Organization", "name": "AveraLabs"}},
+    {"@type": "Person", "name": "Chen Xu", "affiliation": {"@type": "Organization", "name": "AveraLabs"}}
+  ],
+  "publisher": {"@type": "Organization", "name": "AveraLabs", "url": "https://averalabs.com/"},
+  "datePublished": "2026",
+  "url": "https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/",
+  "image": "https://avera-labs.github.io/AwakenFullDuplex-Qwen3Omni/assets/social_preview.png",
+  "keywords": ["full-duplex", "spoken dialogue", "turn-taking", "backchannel", "speech language model", "Qwen3-Omni"],
+  "isAccessibleForFree": true
+}
+</script>
+
+<style>
+:root{
+  color-scheme: light;
+  --ink:#1f2a3b; --ink-2:#4a5a70; --muted:#7a879a; --line:#e3e8f0; --soft:#f6f8fc;
+  --teal:#2b8aa3; --blue-t:#e5f3f7; --lav-t:#eeeafa; --amber-t:#fff2dc; --mint-t:#e6f4ec; --rose-t:#fbe9e4;
+  --acc:#e0702a;
+  --user:#6c9cf0; --agent:#4fbf8f; --bc:#f5b301; --lane:#e9edf3;
+  --maxw:720px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#fff;color:var(--ink);
+  font:17px/1.68 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:var(--teal);text-decoration:none;border-bottom:1px solid #b9dce6}
+a:hover{border-bottom-color:var(--teal)}
+p{margin:0 0 1.05em}
+strong{font-weight:620}
+code{font:14.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:2px 5px}
+
+/* brand bar */
+.brand-bar{border-bottom:1px solid var(--line)}
+.brand-bar-in{max-width:1180px;min-height:48px;margin:0 auto;padding:0 28px;display:flex;align-items:center}
+.brand-mark{display:inline-flex;align-items:center;min-height:44px;border:0}
+.brand-mark img{display:block;height:24px;width:auto}
+.brand-mark:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* hero */
+.hero{background:linear-gradient(160deg,#eef6fa 0%,#f3f0fb 55%,#fff 100%);border-bottom:1px solid var(--line)}
+.hero-heading{max-width:1180px;margin:0 auto;padding:clamp(44px,5.5vw,72px) 28px 44px;text-align:center}
+.hero-in{max-width:848px;margin:0 auto;padding:0 28px 40px}
+.hero-heading h1{font-size:clamp(26px,8vw,60px);line-height:1.08;letter-spacing:-.035em;margin:0 0 16px;font-weight:700}
+.hero-subtitle{max-width:900px;margin:0 auto 18px;font-size:clamp(19px,3vw,30px);line-height:1.3;font-weight:550;color:var(--ink-2);text-wrap:balance}
+.hero-byline{font-size:16px;line-height:1.5;color:var(--ink-2);margin:0 0 24px}
+.hero-date{display:inline-block;white-space:nowrap}
+.hero-links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.hero-links a{display:inline-flex;align-items:center;min-height:44px;padding:8px 18px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:600}
+.hero-links a:hover{background:var(--ink-2)}
+.hero-links a:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.hero-links .soon{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 18px;border-radius:999px;background:rgba(255,255,255,.6);color:var(--muted);border:1px dashed #b9c3d2;font-size:14.5px;font-weight:600;cursor:default}
+.hero-links .soon small{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.lede{font-size:17.5px;line-height:1.62;color:var(--ink-2);margin:0;text-wrap:pretty}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:26px}
+.stat{background:rgba(255,255,255,.78);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.stat b{display:block;font-size:26px;line-height:1.1;letter-spacing:-.02em;font-weight:700}
+.stat b.acc{color:var(--acc)}
+.stat span{display:block;font-size:13px;color:var(--ink-2);line-height:1.4;margin-top:5px}
+.stat em{font-style:normal;color:var(--muted)}
+
+/* layout */
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+nav.toc{position:sticky;top:28px;align-self:start;margin-top:56px;font-size:13.5px}
+nav.toc a{display:block;border:0;color:var(--muted);padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+nav.toc a:hover{color:var(--ink)}
+nav.toc a.on{color:var(--ink);border-left-color:var(--acc)}
+main{max-width:var(--maxw);min-width:0;padding-bottom:80px}
+section{padding-top:56px}
+.kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+.kicker i{font-style:normal;color:var(--acc);margin-right:8px}
+h2{font-size:30px;line-height:1.2;letter-spacing:-.016em;margin:0 0 18px;font-weight:700}
+h3{font-size:20.5px;letter-spacing:-.01em;margin:36px 0 12px;font-weight:650}
+h4{font-size:17px;margin:28px 0 8px;font-weight:650;color:var(--ink)}
+.intro p{font-size:17.5px}
+main ol,main ul{padding-left:1.4em;margin:0 0 1.05em}
+main li{margin:0 0 .55em}
+
+/* figures */
+figure{margin:28px 0 30px}
+figure.wide{margin-left:-60px;margin-right:-60px}
+figure .frame{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;overflow:hidden}
+figure .frame a{display:block;border:0}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:14px;line-height:1.55;color:var(--ink-2);margin-top:10px;padding:0 4px}
+figcaption b{color:var(--ink)}
+figcaption code{font-size:12.5px;padding:1px 4px}
+
+/* samples */
+.samples{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0 8px}
+.sample{border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;background:#fff;display:flex;flex-direction:column;min-width:0}
+.sample:first-child{grid-column:1/-1}
+.sample .hd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.sample .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+.sample .ic svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sample .num{font-size:11.5px;letter-spacing:.12em;color:var(--muted);font-weight:600}
+.sample h4{margin:0;font-size:16.5px}
+.sample p{font-size:14.5px;line-height:1.55;color:var(--ink-2);margin:0 0 12px}
+.sample .lf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;min-height:26px}
+.sample .lf span{display:inline-flex;align-items:center;gap:6px;font-size:12px;border-radius:999px;padding:3px 10px;background:var(--soft);border:1px solid var(--line);color:var(--ink-2)}
+.sample .lf span[hidden]{display:none}
+.sample .lf i{width:8px;height:8px;border-radius:2px;background:var(--bc);flex:none}
+.sample .lf b{font-weight:inherit}
+.player{margin-top:auto;display:flex;align-items:center;gap:12px;border-radius:12px;background:var(--soft);border:1px dashed #cdd5e1;padding:10px 12px}
+.player .pb{width:32px;height:32px;border-radius:50%;background:#dfe5ee;display:grid;place-items:center;flex:none}
+.player .pb svg{width:12px;height:12px;fill:#9aa6b8}
+.player.ready{border-style:solid;border-color:var(--line)}
+.player.ready .pb{border:0;padding:0;cursor:pointer;transition:background .15s,transform .12s}
+.player.ready .pb:hover{background:#d3dae5;transform:scale(1.06)}
+.player.ready .pb:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.player.ready .pb svg{fill:#7a879a;transition:fill .15s}
+.player.ready .pb:hover svg{fill:var(--ink-2)}
+.player .tm{font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:68px;text-align:right}
+.player audio{display:none}
+/* the track: one lane per side (user above, agent below), backchannels in gold, a cursor that follows playback */
+.strip{position:relative;flex:1;min-width:0;padding:1px 0;cursor:pointer;border-radius:4px}
+.strip:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.strip .lane{position:relative;height:11px;margin:3px 0;border-radius:3px;background:var(--lane)}
+.strip .seg{position:absolute;top:0;bottom:0;min-width:3px;border-radius:2px}
+.seg.u,.sw.u{background:var(--user)} .seg.a,.sw.a{background:var(--agent)} .seg.bc,.sw.bc{background:var(--bc)}
+.strip .seg.bc{box-shadow:0 0 0 2px rgba(245,179,1,.28);z-index:1}
+.strip .head{position:absolute;top:-2px;bottom:-2px;left:0;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);pointer-events:none;z-index:2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin:0 0 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.samples-note{font-size:13.5px;color:var(--muted)}
+
+/* citation */
+.bib-wrap{position:relative}
+pre.bib{font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 18px;overflow-x:auto;margin:0 0 22px}
+.copy{position:absolute;top:10px;right:10px;font:600 12px/1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink-2);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer}
+.copy:hover{border-color:var(--teal);color:var(--ink)}
+.copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding:26px 28px 40px;text-align:center}
+
+@media (max-width:1100px){
+  .wrap{grid-template-columns:minmax(0,1fr)} nav.toc{display:none} main{margin:0 auto;width:100%}
+  figure.wide{margin-left:0;margin-right:0}
+}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .samples{grid-template-columns:1fr}
+  figure .frame{padding:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="brand-bar">
+  <div class="brand-bar-in">
+    <a class="brand-mark" href="https://averalabs.com/" aria-label="AveraLabs website">
+      <img src="assets/averalabs-logo.png" alt="AveraLabs" width="348" height="83">
+    </a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-heading">
+    <h1>Awaken Full Duplex</h1>
+    <p class="hero-subtitle">Based on <a href="https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct">Qwen3-Omni</a><br>An LLM Is All You Need: Data-Efficient Adaptation to Full-Duplex, Word-Level Spoken Dialogue</p>
+    <p class="hero-byline">Tairan Chen, Richard Yucheng He, Yihang Liu, Baodong Cao, Chen Xu <span class="hero-date">· <time datetime="2026">2026</time></span></p>
+    <div class="hero-links">
+      <a href="https://github.com/avera-labs/AwakenFullDuplex-Qwen3Omni">GitHub</a>
+      <a href="https://huggingface.co/openmartdev/AwakenFullDuplex-Qwen3Omni">Hugging Face</a>
+      <!-- ARXIV: no arXiv id yet. When it exists, replace this span with
+           <a href="https://arxiv.org/abs/XXXX.XXXXX">arXiv</a> -->
+      <span class="soon" role="link" aria-disabled="true" title="The arXiv link is coming soon">arXiv <small>coming soon</small></span>
+    </div>
+  </div>
+  <div class="hero-in">
+    <p class="lede">Full-duplex voice models listen while they speak, so they can backchannel, yield the floor, and be interrupted. <strong>Awaken is based on <a href="https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct">Qwen3-Omni</a></strong>: it keeps the multimodal LLM frozen and adapts it into a full-duplex dialogue system that decides turn-taking word by word, training 97M parameters in about 30 GPU-hours.</p>
+    <div class="stats">
+      <div class="stat"><b class="acc">97M</b><span>trainable parameters <em>(the 30B Qwen3-Omni backbone stays frozen)</em></span></div>
+      <div class="stat"><b>~30</b><span>GPU-hours for the four-stage thinker curriculum <em>(one NVIDIA B200)</em></span></div>
+      <div class="stat"><b>0.170</b><span>turn-over rate on user pauses, lower is better <em>(next-best open system: 0.584)</em></span></div>
+      <div class="stat"><b>53%</b><span>groundedness on InteractionBench <em>(next-best open system, Freeze-Omni: 35%)</em></span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" id="toc">
+  <a href="#overview" class="on">Overview</a>
+  <a href="#listen">Listen</a>
+  <a href="#how">How it works</a>
+  <a href="#results">Results</a>
+  <a href="#citation">Citation</a>
+  <a href="#license">License</a>
+</nav>
+
+<main>
+
+<!-- ============================ OVERVIEW ============================ -->
+<section id="overview" class="intro">
+<p>Full-duplex behavior is usually obtained by training on hundreds of thousands to millions of hours of speech. That is costly, rewrites the language model that supplies the system’s knowledge, and still leaves turn-taking either implicit or decided coarsely rather than word by word.</p>
+<p>Awaken takes a frozen, general-purpose multimodal LLM, <a href="https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct">Qwen3-Omni</a>, and turns it into a full-duplex dialogue system that decides turn-taking word by word: it backchannels while you talk, yields when you cut in, and takes the floor back.</p>
+<p>On Full-Duplex-Bench and InteractionBench, the system is competitive with open-source full-duplex systems built through large-scale speech training. Among them, it is the least likely to take the floor when the user merely pauses, backchannels most often, and leads in spoken-task accuracy, groundedness, and coherence over long conversations.</p>
+</section>
+
+<!-- ============================ SAMPLES ============================ -->
+<section id="listen">
+<div class="kicker"><i>▶</i>Samples</div>
+<h2>Listen to Awaken</h2>
+<p>Three conversations with Awaken. Each sample is one continuous stereo recording, the user on the left channel and the agent on the right, so headphones let you hear both sides at once.</p>
+<div class="legend" aria-hidden="true">
+  <span><i class="sw u"></i>user</span>
+  <span><i class="sw a"></i>agent</span>
+  <span><i class="sw bc"></i>agent backchannel while the user keeps talking</span>
+</div>
+<p class="samples-note">The strip in each player shows who is speaking when. Click it to jump.</p>
+
+<div class="samples" id="samples"></div>
+</section>
+
+<!-- ============================ HOW IT WORKS ============================ -->
+<section id="how">
+<div class="kicker"><i>01</i>Method</div>
+<h2>How it works</h2>
+<p>We adapt, rather than retrain, a model that already understands speech and text. Starting from Qwen3-Omni, we keep its weights frozen and convert it into the thinking half of a full-duplex system. Only four things are trained: low-rank adapters, seventeen new token embeddings, an audio adapter that reads neural-codec tokens, and a channel-fusion layer. On a 12.5&nbsp;Hz frame clock, the thinker reads the user’s speech and emits one token of the agent’s text per 80&nbsp;ms frame. Pauses, yields, and onsets are tokens of the same vocabulary, and an explicit finite-state machine masks illegal tokens before sampling.</p>
+
+<figure class="wide">
+  <div class="frame"><a href="assets/figures/teaser.png" title="Open full size"><img src="assets/figures/teaser.png" width="1600" height="1035" loading="lazy" alt="Two timelines with a user lane above an agent lane. (a) The agent says 'mm-hm' and 'yeah' while the user describes a job interview, then takes the turn after the user finishes. (b) The user cuts in while the agent is answering; the agent yields within 0.2 seconds and then answers the new question."></a></div>
+  <figcaption><b>Figure 1.</b> Two behaviors on a shared timeline (user above, agent below; schematic: timings and text are illustrative). <b>(a)</b> A free-running conversation: the agent backchannels (“mm-hm”, “yeah”) while the user is still talking and takes the turn when the user finishes, with no external turn detector. <b>(b)</b> A user interruption: the agent yields the floor when the user cuts in (silence-start token, <code>SS</code>) and takes it back to answer the new request (silence-end token, <code>SE</code>).</figcaption>
+</figure>
+
+<figure class="wide">
+  <div class="frame"><a href="assets/figures/overview.png" title="Open full size"><img src="assets/figures/overview.png" width="2400" height="970" loading="lazy" alt="Four stage cards leading from a frozen, turn-based Qwen3-Omni to a full-duplex thinker. Each card shows the frame-level input and output cells, the trained modules, and the KL reference model of that stage; the talker turns the thinker's tokens into speech."></a></div>
+  <figcaption><b>Figure 2.</b> Overview. A frozen, general-purpose multimodal LLM (Qwen3-Omni), which only talks in turns, becomes the thinker of a full-duplex system through four training stages. Each stage card shows what the model reads and emits (one cell per frame: user codec tokens, agent words, pause, <code>SE</code>/<code>SS</code> and <code>PAD</code> cells), which modules it trains, and which model anchors its KL term. The frozen core is never changed. The resulting thinker emits agent text and timing tokens frame by frame, and the talker turns them into speech, so that the agent listens and speaks at the same time.</figcaption>
+</figure>
+
+<p>The work has three contributions.</p>
+<ol>
+  <li><strong>A data-efficient recipe.</strong> It converts a frozen, general-purpose multimodal LLM into a word-level full-duplex dialogue model through four training stages. The stages total about 30 GPU-hours, instead of large-scale speech training.</li>
+  <li><strong>A finite-state treatment of turn-taking.</strong> It keeps per-frame sampling within legal moves. Pause, yield, and onset are tokens of the model’s own vocabulary, predicted at every 80&nbsp;ms frame, and a state machine restricts each draw to the tokens that are legal in the current state.</li>
+  <li><strong>A thinker–talker interface made only of discrete tokens.</strong> As a result, the two halves are trained separately and in either order.</li>
+</ol>
+</section>
+
+<!-- ============================ RESULTS ============================ -->
+<section id="results">
+<div class="kicker"><i>02</i>Evaluation</div>
+<h2>Results</h2>
+<p>We evaluate on two external benchmarks of real-time behavior, <a href="https://arxiv.org/abs/2503.04721">Full-Duplex-Bench</a> (v1.0 and <a href="https://arxiv.org/abs/2507.23159">v1.5</a>) and <a href="https://arxiv.org/abs/2611.02430">InteractionBench</a>, and compare with the published results of open-source full-duplex systems.</p>
+<ul>
+  <li><strong>It waits through pauses.</strong> Of the open-source systems, ours is the least likely to take the floor when the user merely pauses: its turn-over rate on the synthetic subset of Full-Duplex-Bench v1.0 is 0.170, against 0.584 for the next-best system. It also has the highest backchannel frequency.</li>
+  <li><strong>It reacts fastest.</strong> After a user interruption, it stops talking and starts its response sooner than Freeze-Omni and Moshi, and its response latency is the lowest in every scenario of Full-Duplex-Bench v1.5.</li>
+  <li><strong>It stays grounded.</strong> On InteractionBench it is the strongest open-source system on groundedness, coherence, and spoken tasks; its groundedness is 53%, against 35% for Freeze-Omni.</li>
+</ul>
+<p>The full tables, the analyses and the limitations are in the paper.</p>
+</section>
+
+<!-- ============================ CITATION ============================ -->
+<!-- ARXIV: no arXiv id yet. When it exists, replace the howpublished line with
+       eprint        = {XXXX.XXXXX},
+       archivePrefix = {arXiv},
+       primaryClass  = {cs.CL},
+       url           = {https://arxiv.org/abs/XXXX.XXXXX}
+     (check the category against the arXiv listing). -->
+<section id="citation">
+<h2>Citation</h2>
+<div class="bib-wrap">
+<button class="copy" type="button" id="copy-bib" aria-label="Copy BibTeX to clipboard">Copy</button>
+<pre class="bib" id="bib">@misc{chen2026llm,
+  title        = {An {LLM} Is All You Need: Data-Efficient Adaptation to
+                  Full-Duplex, Word-Level Spoken Dialogue},
+  author       = {Tairan Chen and Richard Yucheng He and Yihang Liu and
+                  Baodong Cao and Chen Xu},
+  year         = {2026},
+  howpublished = {\url{https://github.com/avera-labs/AwakenFullDuplex-Qwen3Omni}}
+}</pre>
+</div>
+</section>
+
+<!-- ============================ LICENSE ============================ -->
+<section id="license">
+<h2>License</h2>
+<p>Awaken’s code is released under the <a href="https://github.com/avera-labs/AwakenFullDuplex-Qwen3Omni/blob/main/LICENSE">Apache License 2.0</a>. The license of the model weights is pending; see the <a href="https://huggingface.co/openmartdev/AwakenFullDuplex-Qwen3Omni">model card</a>. Awaken builds on <a href="https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct">Qwen3-Omni</a> (Apache 2.0), on <a href="https://github.com/kyutai-labs/moshi">Moshi</a> and its Mimi codec (weights under CC-BY 4.0), and on <a href="https://github.com/NVIDIA/personaplex">PersonaPlex</a>, from which the talker’s lineage begins; each keeps its own license. See <a href="https://github.com/avera-labs/AwakenFullDuplex-Qwen3Omni/blob/main/NOTICE">NOTICE</a> for details.</p>
+</section>
+
+</main>
+</div>
+
+<footer>Awaken · <a href="https://github.com/avera-labs/AwakenFullDuplex-Qwen3Omni">Code</a> · <a href="https://huggingface.co/openmartdev/AwakenFullDuplex-Qwen3Omni">Model</a> · Built on <a href="https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct">Qwen3-Omni</a> · <span style="white-space:nowrap">Code: Apache 2.0</span></footer>
+
+<script>
+/* ---------- Audio samples (stereo: user left, agent right). `card` says who speaks when; see assets/demos/*.card.json:
+   {hz, n, duration, words:{user:[[first,last,text,isBackchannel],...], agent:[...]}, stats:{backchannels}} ---------- */
+const SAMPLES = [
+  {id:'sick-dog', title:'Sick dog', tint:'var(--rose-t)',
+   desc:'The user’s 12-year-old dog has stopped eating, and the vet’s test results won’t come until Friday.',
+   listen:['Waiting through pauses','A comforting reply'],
+   audio:'assets/demos/sick-dog.m4a', card:'assets/demos/sick-dog.card.json',
+   icon:'<circle cx="6.5" cy="10" r="1.7"/><circle cx="9.8" cy="6.4" r="1.7"/><circle cx="14.2" cy="6.4" r="1.7"/><circle cx="17.5" cy="10" r="1.7"/><path d="M12 12c-2.5 0-5 3.2-5 5.4 0 1.5 1.1 2.4 2.5 2.4 1.1 0 1.6-.6 2.5-.6s1.4.6 2.5.6c1.4 0 2.5-.9 2.5-2.4 0-2.2-2.5-5.4-5-5.4z"/>'},
+  {id:'solo-trip', title:'Solo trip', tint:'var(--blue-t)',
+   desc:'The user has finally booked a first solo trip, ten days in Japan, and is excited but a little nervous about getting lost.',
+   listen:['Sharing the excitement','Follow-up questions'],
+   audio:'assets/demos/solo-trip.m4a', card:'assets/demos/solo-trip.card.json',
+   icon:'<rect x="4" y="7.5" width="16" height="12" rx="2"/><path d="M9 7.5V5.6A1.6 1.6 0 0 1 10.6 4h2.8A1.6 1.6 0 0 1 15 5.6v1.9"/><path d="M8 7.5v12M16 7.5v12"/>'},
+  {id:'roommate-conflict', title:'Roommate conflict', tint:'var(--lav-t)',
+   desc:'The user and their roommate agreed to split the chores, but the dishes keep piling up, and raising it has made things awkward at home.',
+   listen:['Gentle advice','Encouragement'],
+   audio:'assets/demos/roommate-conflict.m4a', card:'assets/demos/roommate-conflict.card.json',
+   icon:'<circle cx="8.5" cy="8" r="3"/><path d="M3 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="16.5" cy="9" r="2.5"/><path d="M15.2 14.2A4.6 4.6 0 0 1 21 18.6"/>'},
+];
+(function renderSamples(){
+  const host=document.getElementById('samples');
+  const PLAY='<path d="M2 1l9 5-9 5z"/>', PAUSE='<path d="M2 1h3v10H2zM7 1h3v10H7z"/>';
+  const fmt=t=>{t=Math.max(0,Math.floor(t||0));return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;};
+  const audios=[];
+  SAMPLES.forEach((s,i)=>{
+    host.insertAdjacentHTML('beforeend',`<article class="sample" id="sample-${s.id}">
+      <div class="hd"><div class="ic" style="background:${s.tint}"><svg viewBox="0 0 24 24" aria-hidden="true">${s.icon}</svg></div>
+      <div><div class="num">SAMPLE ${String(i+1).padStart(2,'0')}</div><h4>${s.title}</h4></div></div>
+      <p>${s.desc}</p>
+      <div class="lf"><span class="bcs" hidden><i aria-hidden="true"></i><b></b></span>${s.listen.map(t=>`<span>${t}</span>`).join('')}</div>
+      <div class="player ready"><button class="pb" type="button" aria-label="Play ${s.title}"><svg viewBox="0 0 12 12">${PLAY}</svg></button>
+        <div class="strip" role="slider" tabindex="0" aria-label="Seek in ${s.title}: user lane above, agent lane below" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="lane"></div><div class="lane"></div><div class="head"></div></div>
+        <span class="tm">0:00</span><audio preload="metadata"></audio></div></article>`);
+    const card=host.lastElementChild;
+    const au=card.querySelector('audio'), btn=card.querySelector('.pb'), ico=btn.querySelector('svg'),
+          strip=card.querySelector('.strip'), lanes=strip.querySelectorAll('.lane'), head=strip.querySelector('.head'),
+          tm=card.querySelector('.tm'), chip=card.querySelector('.bcs');
+    audios.push(au);
+    let dur=0, raf=0;
+    const length=()=>dur||au.duration||0;
+
+    // Play from memory, so that seeking works on servers without HTTP range support too.
+    fetch(s.audio).then(r=>r.ok?r.blob():Promise.reject(new Error('HTTP '+r.status)))
+      .then(b=>{au.src=URL.createObjectURL(b);})
+      .catch(()=>{au.src=s.audio;});
+
+    // Who speaks when: word spans closer than 3 frames merge into one segment; backchannels in gold.
+    fetch(s.card).then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status))).then(d=>{
+      if(d.duration) dur=d.duration;
+      [[d.words.user,'u',lanes[0]],[d.words.agent,'a',lanes[1]]].forEach(([spans,cls,lane])=>{
+        const segs=[];
+        spans.forEach(([first,last,,bc])=>{
+          const prev=segs[segs.length-1];
+          if(prev && !!bc===prev.bc && first-prev.end<=3) prev.end=last;
+          else segs.push({start:first,end:last,bc:!!bc});
+        });
+        lane.innerHTML=segs.map(g=>`<i class="seg ${g.bc?'bc':cls}" style="left:${(100*g.start/d.n).toFixed(3)}%;width:${(100*(g.end-g.start+1)/d.n).toFixed(3)}%"></i>`).join('');
+      });
+      const n=(d.stats||{}).backchannels;
+      if(n){chip.querySelector('b').textContent=`${n} backchannel${n===1?'':'s'} while the user is talking`;chip.hidden=false;}
+      paint();
+    }).catch(err=>console.warn('Could not read',s.card,err));
+
+    function paint(){
+      const L=length(), t=au.currentTime||0, f=L?Math.min(1,t/L):0;
+      head.style.left=(100*f)+'%';
+      tm.textContent=L?`${fmt(t)} / ${fmt(L)}`:fmt(t);
+      strip.setAttribute('aria-valuenow',Math.round(f*100));
+      strip.setAttribute('aria-valuetext',`${fmt(t)} of ${fmt(L)}`);
+    }
+    const loop=()=>{paint();if(!au.paused&&!au.ended)raf=requestAnimationFrame(loop);};
+    const seek=f=>{const L=length();if(!L)return;au.currentTime=Math.min(Math.max(f,0),1)*L;paint();};
+    btn.addEventListener('click',()=>{if(au.paused)au.play().catch(()=>{});else au.pause();});
+    au.addEventListener('play',()=>{audios.forEach(o=>o!==au&&o.pause());ico.innerHTML=PAUSE;btn.setAttribute('aria-label','Pause '+s.title);
+      cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);});
+    au.addEventListener('pause',()=>{ico.innerHTML=PLAY;btn.setAttribute('aria-label','Play '+s.title);paint();});
+    au.addEventListener('ended',()=>{au.currentTime=0;paint();});
+    ['loadedmetadata','seeked','timeupdate'].forEach(e=>au.addEventListener(e,paint));
+    strip.addEventListener('click',e=>{const r=strip.getBoundingClientRect();seek((e.clientX-r.left)/r.width);});
+    strip.addEventListener('keydown',e=>{
+      const L=length();if(!L)return;
+      const step=5/L, f=(au.currentTime||0)/L;
+      if(e.key==='ArrowRight'){seek(f+step);e.preventDefault();}
+      else if(e.key==='ArrowLeft'){seek(f-step);e.preventDefault();}
+      else if(e.key==='Home'){seek(0);e.preventDefault();}
+      else if(e.key==='End'){seek(1);e.preventDefault();}
+      else if(e.key===' '||e.key==='Enter'){btn.click();e.preventDefault();}
+    });
+  });
+})();
+
+/* ---------- BibTeX copy ---------- */
+(function(){
+  const btn=document.getElementById('copy-bib'), bib=document.getElementById('bib');
+  const done=ok=>{btn.textContent=ok?'Copied':'Press Ctrl/Cmd+C';setTimeout(()=>{btn.textContent='Copy';},2000);};
+  const fallback=()=>{
+    const ta=document.createElement('textarea');ta.value=bib.textContent;ta.setAttribute('readonly','');
+    ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy');}catch(e){ok=false;}
+    document.body.removeChild(ta);
+    if(!ok){const r=document.createRange();r.selectNodeContents(bib);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+    done(ok);
+  };
+  btn.addEventListener('click',()=>{
+    if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(bib.textContent).then(()=>done(true),fallback);
+    else fallback();
+  });
+})();
+
+/* ---------- TOC highlight ---------- */
+const links=[...document.querySelectorAll('#toc a')];
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('main section').forEach(sec=>obs.observe(sec));
+</script>
+
+</body>
+</html>
